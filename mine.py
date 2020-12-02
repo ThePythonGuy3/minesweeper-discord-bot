@@ -32,6 +32,8 @@ def checkNum(x, y):
 def init(ww, hh):
 	global a, flg, prs, w, h, mm, x, y
 
+	a, flg, prs, w, h, mm, x, y = [], [], [], 12, 8, 15, 0, 0
+
 	w = ww
 	h = hh
 
@@ -50,16 +52,21 @@ def init(ww, hh):
 
 	#add mines
 	for i in range(mm):
-		if(i >= (h * w) - 1): continue
+		if(i >= (h * w)): continue
 		yp = randint(1, h) - 1
 		xp = randint(1, w) - 1
 		
+		cn = 0
 		while 1:
 			if(a[yp][xp] == ":bomb:"):
 				yp = randint(1, h) - 1
 				xp = randint(1, w) - 1
 			else:
 				break
+			#prevent infinite loop
+			if(cn > 1000): break
+			cn += 1
+
 
 		a[yp][xp] = ":bomb:"
 
@@ -112,8 +119,10 @@ def addPos(xx, yy):
 	y += yy
 
 def addFlag():
-	global prs, x, y
-	if(prs[y][x] == 0): flg[y][x] = 1
+	global flg, prs, x, y
+	if(prs[y][x] == 0 and flg[y][x] == 0): flg[y][x] = 1
+	elif(flg[y][x] == 1): flg[y][x] = 0
+
 
 def revealPos():
 	global flg, x, y
@@ -186,7 +195,7 @@ class MyClient(discord.Client):
 
 
 client = MyClient()
-client.run('<your token goes here>')
+client.run('<token goes here>')
 
 """def main():
 	printG(0, 0)
