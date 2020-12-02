@@ -2,7 +2,7 @@ from random import *
 import os
 import discord
 
-a, flg, prs, w, h, mm, x, y = [], [], [], 12, 8, 15, 0, 0
+a, flg, prs, w, h, mm, x, y, lost = [], [], [], 12, 8, 15, 0, 0, False
 
 #is integer?
 def is_int(s):
@@ -30,9 +30,9 @@ def checkNum(x, y):
 
 #initialize the board
 def init(ww, hh):
-	global a, flg, prs, w, h, mm, x, y
+	global a, flg, prs, w, h, mm, x, y, lost
 
-	a, flg, prs, w, h, mm, x, y = [], [], [], 12, 8, 15, 0, 0
+	a, flg, prs, w, h, mm, x, y, lost = [], [], [], 12, 8, 15, 0, 0, False
 
 	w = ww
 	h = hh
@@ -94,7 +94,6 @@ def printG():
 
 	clampPos()
 
-	os.system("clear")
 	oo = ""
 	for i in range(h):
 		o = ""
@@ -109,7 +108,21 @@ def printG():
 				o += ":blue_square:"
 				continue
 			o += a[i][j]
-		oo += o + "\n" #print(o)
+		oo += o + "\n"
+	return oo
+
+def printGO():
+	clampPos()
+
+	oo = ""
+	for i in range(h):
+		o = ""
+		for j in range(w):
+			if(a[i][j] == ":bomb:"):
+				o += ":boom:"
+				continue
+			o += a[i][j]
+		oo += o + "\n"
 	return oo
 
 
@@ -124,8 +137,12 @@ def addFlag():
 	elif(flg[y][x] == 1): flg[y][x] = 0
 
 
-def revealPos():
-	global flg, x, y
+async def revealPos(msg):
+	global lost, a, flg, x, y
+
+	embed = discord.Embed(title = "You lost :(", type = "rich", description = printGO(), colour = discord.Colour.from_rgb(56, 245, 154))
+
+	if(a[y][x] == ":bomb:"): await msg.edit(embed = embed); lost = True
 	if(flg[y][x] == 0): prs[y][x] = 1
 
 def error(e):
@@ -187,45 +204,13 @@ class MyClient(discord.Client):
 				if reaction.emoji == '🚩':
 					addFlag()
 				if reaction.emoji == '👇':
-					revealPos()
+					await revealPos(mesg)
 
-			embed = discord.Embed(title = "MineSweeper", type = "rich", description = printG(), colour = discord.Colour.from_rgb(56, 245, 154))
+			if not lost:
+				embed = discord.Embed(title = "MineSweeper", type = "rich", description = printG(), colour = discord.Colour.from_rgb(56, 245, 154))
 
-			await mesg.edit(embed = embed)
+				await mesg.edit(embed = embed)
 
 
 client = MyClient()
 client.run('<token goes here>')
-
-"""def main():
-	printG(0, 0)
-	x = 0
-	y = 0
-	a = ["w", "a", "s", "d"]
-	b = [[-1, 0], [0, -1], [1, 0], [0, 1]]
-	oc = ""
-	for i in a:
-		oc += i + "/"
-	oc += "o/f: "
-	while 1:
-		c = input(oc)
-		if(c != "o" and c != "f" and c not in a): printG(x, y); continue
-
-		if(not (c == "o" or c == "f")):
-			d = b[a.index(c)]
-
-			x += d[1]
-			y += d[0]
-
-			x = max(0, min(x, 17))
-			y = max(0, min(y, 13))
-		elif(c == "f"):
-			flg[y][x] = 1
-		elif(c == "o"):
-			prs[y][x] = 1
-			print(prs[y][x])
-			flg[y][x] = 0
-
-		printG(x, y)
-
-main()"""
