@@ -126,6 +126,20 @@ def printGO():
 		oo += o + "\n"
 	return oo
 
+def printWO():
+	clampPos()
+
+	oo = ""
+	for i in range(h):
+		o = ""
+		for j in range(w):
+			if(a[i][j] == ":bomb:"):
+				o += ":triangular_flag_on_post:"
+				continue
+			o += a[i][j]
+		oo += o + "\n"
+	return oo
+
 
 def addPos(xx, yy):
 	global x, y
@@ -145,6 +159,15 @@ async def revealPos(msg):
 
 	if(a[y][x] == ":bomb:"): await msg.edit(embed = embed); lost = True
 	if(flg[y][x] == 0): prs[y][x] = 1
+
+def checkWon():
+	global a, flg
+
+	for i in range(h):
+		for j in range(w):
+			if(a[i][j] == ":bomb:" and flg[i][j] != 1): return False
+
+	return True
 
 def error(e):
 	return discord.Embed(title = "Error", type = "rich", description = e, colour = discord.Colour.from_rgb(237, 69, 69))
@@ -180,7 +203,7 @@ class MyClient(discord.Client):
 					init(w, h)
 
 					try:
-						embed = discord.Embed(title = "MineSweeper", type = "rich", description = printG(), colour = discord.Colour.from_rgb(56, 245, 154))
+						embed = discord.Embed(title = "MineSweeper", type = "rich", description = printG())
 
 						mesg = await message.channel.send(embed = embed)
 
@@ -195,12 +218,12 @@ class MyClient(discord.Client):
 				await message.channel.send(embed = error(str(e)))
 
 		if message.content.startswith("$help"):
-			embed = discord.Embed(title = "Help", type = "rich", description = "", colour = discord.Colour.from_rgb(56, 245, 154))
+			embed = discord.Embed(title = "Help", type = "rich", description = "")
 
 			await message.channel.send(embed = embed)
 
 	async def on_reaction_add(self, reaction, user):
-		global mesg
+		global mesg, lost
 
 		async for usr in reaction.users():
 			if usr == client.user: continue
@@ -216,15 +239,21 @@ class MyClient(discord.Client):
 					addPos(0, 1)
 				if reaction.emoji == '🚩':
 					addFlag()
+					if checkWon():
+						embed = discord.Embed(title = "You won! :confetti_ball:", type = "rich", description = printWO(), colour = discord.Colour.from_rgb(56, 245, 154))
+
+						await mesg.edit(embed = embed)
+
+						lost = True
 				if reaction.emoji == '👇':
 					await revealPos(mesg)
 
-				await reaction.remove(usr)
-
 				if not lost:
-					embed = discord.Embed(title = "MineSweeper", type = "rich", description = printG(), colour = discord.Colour.from_rgb(56, 245, 154))
+					embed = discord.Embed(title = "MineSweeper", type = "rich", description = printG())
 
 					await mesg.edit(embed = embed)
+
+				await reaction.remove(usr)
 
 
 client = MyClient()
